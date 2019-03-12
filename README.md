@@ -1,29 +1,19 @@
-# tilebox
+# Tilebox prototype
 
-## Project setup
-```
-npm install
-```
+## Lightweight snapshot based tile generation doesn't modify document properties or artboards:
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+![export options](https://thumbs.gfycat.com/AmpleWindingFairyfly-size_restricted.gif)
 
-### Compiles and minifies for production
-```
-npm run build
-```
+## Dynamic settings
+* Custom pattern definition to support any mapping framework like Google Maps, Leaflet.js, Mapbox, etc.
+* File type
+* Output path
+* Size of tile in pixels
+* `Keyword` is the phrase within each artboard name to be considered as a tilemap for scanning and previewing 
+* `Zoom Range` min/max sliders from `zoom 0` to `zoom 6` (producing 4096 tiles)
 
-### Run your tests
-```
-npm run test
-```
+![](https://thumbs.gfycat.com/MadeupThornyBarnacle-size_restricted.gif)
 
-### Lints and fixes files
-```
-npm run lint
-```
+## ^ Only artboards that are evenly divisible by the tile size, contain the `Keyword`, and are equirectangular will be rendered to the list.
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+![](https://thumbs.gfycat.com/BraveBelatedBrocketdeer-size_restricted.gif)

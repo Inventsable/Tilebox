@@ -1,57 +1,79 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br>
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-      <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-      <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
-    </ul>
-  </div>
+  <v-layout row wrap>
+    <v-flex xs12>
+      <v-card flat>
+        <!-- <v-divider></v-divider> -->
+        <v-list two-line>
+          <v-list-tile
+            v-for="(item, key) in fake"
+            :key="key"
+            avatar
+            @click="item.checked = !item.checked"
+          >
+            <v-list-tile-action style="min-width:0px;">
+              <v-checkbox @click="item.checked = !item.checked" color="primary" v-model="item.checked"></v-checkbox>
+            </v-list-tile-action>
+            <v-list-tile-action class="pa-1">
+              <v-img
+                  :src="getImagePreview(key)"
+                  :lazy-src="getImagePreview(key)"
+                  aspect-ratio="1"
+                  class="grey lighten-2"
+                ></v-img>
+            </v-list-tile-action>
+            <v-list-tile-content class="pl-2">
+              <v-list-tile-title>{{item.name}}</v-list-tile-title>
+              <v-list-tile-sub-title>{{`z${item.zoomLevel}: ${item.tilecount} ${item.tilecount > 1 ? 'tiles' : 'tile'}, ${item.width} x ${item.height}`}}</v-list-tile-sub-title>            </v-list-tile-content>
+          </v-list-tile>
+
+        </v-list>
+        <!-- <v-card-actions>
+          
+        </v-card-actions> -->
+      </v-card>
+    </v-flex>
+  </v-layout>
+
+
 </template>
 
 <script>
-export default {
-  name: 'HelloWorld',
-  props: {
-    msg: String
+
+  export default {
+    data: () => ({
+      tileSize: 256,
+    }),
+    computed:  {
+      fake() {
+        return this.$root.$children[0].boards;
+      }
+    },
+    mounted() {
+
+    },
+    methods: {
+      getImagePreview(key) {
+        let path = `${this.$root.$children[0].preview}${key}.png`;
+        // console.log(path)
+        return path;
+      }
+    }
   }
-}
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-h3 {
-  margin: 40px 0 0;
+<style>
+.theme--dark.v-sheet {
+  background-color: #323232;
 }
-ul {
-  list-style-type: none;
-  padding: 0;
+.theme--dark.v-list {
+  background: #323232;
 }
-li {
-  display: inline-block;
-  margin: 0 10px;
+
+.v-list--two-line .v-list__tile {
+  height: 56px;
 }
-a {
-  color: #42b983;
+
+.head {
+  background-color: rgba(255, 255, 255, .05)
 }
 </style>
