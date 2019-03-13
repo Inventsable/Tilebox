@@ -84,7 +84,7 @@ function setOptions(opts) {
     options.min = opts.min;
     options.path = opts.path;
     options.pattern = opts.pattern;
-    showOptions();
+    // showOptions();
 }
 
 function showOptions() {

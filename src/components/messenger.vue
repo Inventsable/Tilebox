@@ -2,6 +2,7 @@
     <v-snackbar
         flat
         :auto-height="true"
+        color="primary"
         v-model="status"
         :bottom="y === 'bottom'"
         :left="x === 'left'"
@@ -30,7 +31,7 @@
 export default {
     name: 'messenger',
     data: () => ({
-        status: false,
+        status: true,
         y: 'top',
         x: null,
         mode: '',

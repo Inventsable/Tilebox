@@ -1,9 +1,9 @@
 <template>
     <v-toolbar style="height: 36px;" flat>
         <div class="toolgrid" style="height: 36px;">
-            <v-btn :disabled="$route.name !== 'home'" class="my-0" flat block @click="refresh">
+            <!-- <v-btn :disabled="$route.name !== 'home'" class="my-0" flat block @click="refresh">
                 <v-icon>refresh</v-icon>
-            </v-btn>
+            </v-btn> -->
             <v-btn
                 class="my-0" 
                 v-for="link in links" 
@@ -22,6 +22,11 @@ export default {
     name: 'navbar',
     data: () => ({
         links: [
+            {
+                // route: '/home',
+                name: 'box',
+                icon: 'build',
+            },
             {
                 // route: '/home',
                 name: 'home',

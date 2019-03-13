@@ -82,7 +82,7 @@ function setOptions(opts) {
     options.min = opts.min;
     options.path = opts.path;
     options.pattern = opts.pattern;
-    showOptions();
+    // showOptions();
 }
 function showOptions() {
     console.log(options.ext + " \r\n" + options.size + " \r\n" + options.max + " \r\n" + options.min + " \r\n" + options.path + " \r\n" + options.pattern);

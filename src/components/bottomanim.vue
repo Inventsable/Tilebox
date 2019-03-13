@@ -31,11 +31,11 @@
                                 export
                             </v-btn>
                         </div>
-                        <div class="refresh">
+                        <!-- <div class="refresh">
                             <v-btn block flat @click="init" color="primary">
                                 <v-icon>refresh</v-icon>
                             </v-btn>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </v-card>
@@ -51,7 +51,7 @@ export default {
             if ((!this.hasBoards || !this.hasChecked)) {
                 return true;
             } else {
-                if (this.$route.name !== 'home')
+                if (this.$route.name == 'settings')
                     return true;
                 else
                     return false;
@@ -100,7 +100,10 @@ export default {
     },
     methods: {
         triggerExport() {
-            this.$root.$children[0].startExport();
+            if (this.$route.name !== 'box')
+                this.$root.$children[0].startExport();
+            else
+                this.$root.$children[0].cellExport();
         },
         start() {
             // this.progress = 0;
@@ -169,7 +172,7 @@ export default {
 .foot-grid {
     width: 80%;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     /* align-items: center; */
 
 }
