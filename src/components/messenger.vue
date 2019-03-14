@@ -31,7 +31,7 @@
 export default {
     name: 'messenger',
     data: () => ({
-        status: true,
+        status: false,
         y: 'top',
         x: null,
         mode: '',

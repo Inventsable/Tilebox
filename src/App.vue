@@ -1,6 +1,15 @@
 <template>
   <v-app dark>
     <navbar />
+    <v-progress-linear
+      v-model="value"
+      :active="show"
+      :indeterminate="query"
+      :query="true"
+      class="my-0"
+      height="3"
+      :color="checkProgress()"
+      ></v-progress-linear>
     <messenger ref="snack" />
     <v-content id="content">
       <router-view />
@@ -28,6 +37,10 @@ export default {
     macOS: false,
     bottomNav: false,
     sheet: true,
+    value: 0,
+    show: true,
+    query: false,
+    progressHidden: false,
     cs: window.__adobe_cep__,
     // localhost: null,
     csInterface: null,
@@ -105,7 +118,21 @@ export default {
       return mirror;
     }
   },
-  methods: {    
+  methods: {
+    checkProgress() {
+      if ((!this.query) && (this.value == 0))
+        return 'grey darken-4'
+      else
+        return 'primary'
+    },
+    startProgressLoader() {
+      this.query = true
+      this.show = true
+      this.value = 0
+    },
+    stopProgressLoader() {
+      this.query = false;
+    },
     setContextMenu() {
       this.csInterface.setContextMenuByJSON(this.menuString, this.contextMenuClicked);
     },
@@ -150,22 +177,15 @@ export default {
         pattern: this.opts.pattern,
         size: this.opts.size,
       });
-      console.log(opts);
+      // console.log(opts);
       this.csInterface.evalScript(`exportTilemap('${opts}')`, (msg) => {
-        // console.log(msg);
-        console.log('Done!')
-        this.$refs.anim.stopScan();
+        this.stopProgressLoader();
         this.snackMessage('Done!')
-        // msg = JSON.parse(msg);
-        // console.log(msg)
-      //   this.boards = msg;
-      //   this.constructGrids();
       });
-      // this.$refs.anim.endScan();
 
     },
     snackMessage(msg) {
-      console.log(msg);
+      // console.log(msg);
       this.message = msg;
       this.$refs.snack.show();
     },
@@ -207,7 +227,13 @@ export default {
     },
     readBoards() {
       this.clearBoards();
-      this.$refs.anim.startScan();
+      if (this.$route.name == 'box') {
+        let page = this.$children[0].$children[3].$children[0].$children[0];
+        console.log(page)
+        page.clearMirror();
+      }
+      // this.$refs.anim.startScan();
+      this.startProgressLoader();
       let keyword = this.opts.keyword;
       let opts = JSON.stringify({
         ext: this.fileType,
@@ -226,7 +252,7 @@ export default {
 
       });
       console.log(this.boards);
-      this.$refs.anim.endScan();
+      this.startProgressLoader();
     },
     loadUniversalScripts() {
       this.csInterface.evalScript(`$.evalFile('${this.csInterface.getSystemPath(SystemPath.EXTENSION)}/src/host/universal/json2.jsx')`)
@@ -278,6 +304,12 @@ export default {
         board.grid = mirror;
       });
       console.log(this.boards);
+      if (this.$route.name == 'box') {
+        let page = this.$children[0].$children[3].$children[0].$children[0];
+        console.log(page)
+        page.cloneGrid();
+      }
+      this.stopProgressLoader();
     }
   },
 }
@@ -286,6 +318,7 @@ export default {
 <style>
 :root {
   --color-bg: #323232;
+  --color-dark: #1f1f1f;
   --color-selection: #46a0f5;
   --color-hover: rgba(255,255,225,.2);
   --color-icon: #b7b7b7;
@@ -308,6 +341,10 @@ body::-webkit-scrollbar {
   display: none;
 } */
 
+
+.theme--dark.v-toolbar {
+  background-color: var(--color-dark);
+}
 .theme--dark.application {
   background: var(--color-bg);
 }

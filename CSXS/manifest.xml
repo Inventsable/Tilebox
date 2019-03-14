@@ -36,10 +36,10 @@
           <Geometry>
             <Size>
               <Height>400</Height>
-              <Width>260</Width>
+              <Width>280</Width>
             </Size>
             <MaxSize>
-              <Height>500</Height>
+              <Height>700</Height>
               <Width>500</Width>
             </MaxSize>
             <MinSize>

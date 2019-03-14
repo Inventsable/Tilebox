@@ -1,6 +1,47 @@
 <template>
     <div class="maincontent">
-        <div class="square mt-3" :style="setPreview()">
+        <div v-if="selection" class="annogrid">
+            <div class="annotop">
+                    <!-- <v-icon>add</v-icon> -->
+                    <span class="caption text-uppercase font-weight-medium selectlabel">Select</span>
+                    <v-btn flat block
+                        class="pa-1 ma-0"
+                        @click="selectAll"
+                    >all</v-btn> 
+                    <v-btn flat block
+                        class="pa-1 ma-0"
+                        :disabled="checkHasMissing()"
+                        @click="selectMissing"
+                    >missing</v-btn>
+                    <v-btn flat block
+                        class="pa-1 ma-0"
+                        @click="clearAllSelected"
+                    >
+                        <v-icon small>delete</v-icon>
+                    </v-btn>
+            </div>
+            <div class="annobottom">
+                <v-btn flat block
+                    class="ma-0"
+                    :disabled="!hasMultiple"
+                    @click="navigateActive(false)">
+                    <v-icon>arrow_left</v-icon>
+                </v-btn>
+                <span class="title annoZoom">
+                    {{this.zoom}}
+                </span>
+                <v-btn flat block
+                    class="ma-0"
+                    :disabled="!hasMultiple"
+                    @click="navigateActive(true)">
+                    <v-icon>arrow_right</v-icon>
+                </v-btn>
+                <span class="boardanno">
+                    {{getBoardAnno()}}
+                </span>
+            </div>
+        </div>
+        <div v-if="selection" class="square mt-3" :style="setPreview()">
             <div class="gridBox" :style="getGridStyle()" @mouseenter="prepGrid()" @mouseleave="deprepGrid()">
                 <div 
                     class="gridCell"
@@ -14,25 +55,19 @@
                 </div>
             </div>
         </div>
-        <!-- <div class="annotation"> -->
-            <div class="annogrid">
-                <div class="annotop"></div>
-                <div class="annobottom">
-                    <v-btn flat block
-                        :disabled="!hasMultiple"
-                        @click="navigateActive(false)">
-                        <v-icon>arrow_left</v-icon>
-                    </v-btn>
-                    <span class="title annoZoom">
-                        {{this.zoom}}
-                    </span>
-                    <v-btn flat block
-                        :disabled="!hasMultiple"
-                        @click="navigateActive(true)">
-                        <v-icon>arrow_right</v-icon>
-                    </v-btn>
-                </div>
+        <div class="exportToolbar" v-if="selection">
+            <div></div>
+            <div class="exportButtn">
+                <v-btn flat block
+                    @click="exportSelection"
+                    :disabled="checkCanExport()"
+                >
+                        export
+                </v-btn>
             </div>
+            <div></div>
+        </div>
+        <!-- <div class="annotation"> -->
             <!-- <v-layout row wrap>
                 <v-flex xs4 v-for="board in exports" :key="board.zoomLevel">
                     <v-btn>{{board.grid.z}}</v-btn>
@@ -46,7 +81,7 @@
 export default {
     name: 'box',
     data: () => ({
-        active: 2,
+        active: null,
         mirror: [],
         mods: ['shift'],
         shift: false,
@@ -56,6 +91,8 @@ export default {
         dragging: false,
         clicked: false,
         overrideClick: false,
+        fileNodes: [],
+        lastNodeLength: null,
         // zoom: null,
     }),
     mounted() {
@@ -68,12 +105,16 @@ export default {
         // console.log(this.fileNodes);
         // console.log('hello')
         setInterval(this.checkDisplay, 200);
+        setInterval(this.checkFileNodes, 200);
         window.addEventListener('keydown', this.checkMods);
         window.addEventListener('keyup', this.checkMods);
         window.addEventListener('mousedown', this.checkMouse);
         window.addEventListener('mouseup', this.checkMouse);
+
+
     },
     computed: {
+        app() { return this.$root.$children[0]},
         boards() {
             return this.$root.$children[0].realBoards;
         },
@@ -95,7 +136,10 @@ export default {
             }
         },
         zoom() {
-            return this.zoomLevels[this.active];
+            if (this.selection)
+                return this.zoomLevels[this.active];
+            else if (this.zoomLevels.length)
+                return this.zoomLevels[0];
         },
         zoomLevels() {
             let mirror = [];
@@ -123,6 +167,13 @@ export default {
                 return cell.selected;
             })
         },
+        missingCells() {
+            if (this.exists) {
+                return this.activeGrid.filter(cell => {
+                    return !this.cellExists(cell);
+                })
+            }
+        },
         tilecount() {
             if (this.exists) {
                 return this.selection.tilecount;
@@ -146,14 +197,7 @@ export default {
         destinationPath() {
             return this.$root.$children[0].getRealPath();
         },
-        fileNodes() {
-            var result = window.cep.fs.readdir(this.destinationPath);
-            if (0 == result.err) {
-                return result.data;
-            } else {
-                return [];
-            }
-        },
+        
         hasMultiple() {
             if (this.mirror.length) {
                 if (this.mirror.length > 1)
@@ -177,6 +221,59 @@ export default {
         }
     },
     methods: {
+        checkFileNodes() {
+            var result = window.cep.fs.readdir(this.destinationPath);
+            if (0 == result.err) {
+                if (result.data.length !== this.lastNodeLength) {
+                    this.fileNodes = result.data;
+                    this.lastNodeLength = result.data.length;
+                }
+            } else {
+                this.fileNodes = [];
+            }
+        },
+        exportSelection() {
+            let message = JSON.stringify(this.selectedCells);
+            this.app.startProgressLoader();
+            const self = this;
+            this.app.csInterface.evalScript(`exportSelectedTiles('${message}')`, function() {
+                self.app.stopProgressLoader();
+                self.app.snackMessage('Done!');
+                self.clearAllSelected();
+                self.checkFileNodes();
+            })
+            // this.selectedCells.forEach(cell => {
+                
+            //     this.$root.$children[0].csInterface.evalScript(`exportSelectedTiles()`)
+            // })
+        },
+        checkCanExport() {
+            if (this.exists && this.selection) {
+                if (this.selectedCells.length)
+                    return false;
+                else
+                    return true;
+            } else {
+                return true;
+            }
+        },
+        checkHasMissing() {
+            if (this.exists && this.selection) {
+                return this.missingCells.length < 1 ? true : false;
+            } else {
+                return null;
+            }
+        },
+        getBoardAnno() {
+            if (this.exists && this.selection) {
+                if (this.missingCells.length) {
+                    return `${this.activeGrid.length - this.missingCells.length} of ${this.activeGrid.length}`;
+                } else {
+                    return `${this.activeGrid.length} tile${this.activeGrid.length !== 1 ? 's' : ''}`
+                }
+            }
+            // return `${this.zoom}`
+        },
         navigateActive(state) {
             let last = this.mirror.length - 1;
             if (state) {
@@ -194,7 +291,7 @@ export default {
             // console.log(this.active)
         },
         checkMouse(evt) {
-            if (this.inGrid && this.exists) {
+            if (this.inGrid && this.mirror.length && this.selection) {
                 if (/up/i.test(evt.type))
                     this.clicked = false;
                 else
@@ -202,6 +299,9 @@ export default {
                 if (this.clicked) {
                     this.hoveredCell.selected = !this.hoveredCell.selected;
                     this.overrideClick = true;
+                    console.log(this.hoveredCell.name)
+                    console.log(this.activeGrid)
+                    console.log(this.selection)
                 } else {
                     // this.hoveredCell.selected = false;
                     this.overrideClick = false;
@@ -232,20 +332,22 @@ export default {
                         this[mod] = event[mod + 'Key'];
                 }
             })
-            if (this.shift && this.inGrid) {
-                if (!this.locked) {
+            if (this.inGrid) {
+                if (this.shift) {
+                    if (!this.locked) {
+                        // console.log(this.hoveredCell);
+                        this.highlightQuadrantOf(this.hoveredCell, true);
+                        this.locked = true;
+                        this.cloneGrid();
+                    }
+                } else if (/shift/i.test(event.key)) {
+                    this.locked = false;
                     // console.log(this.hoveredCell);
-                    this.highlightQuadrantOf(this.hoveredCell, true);
-                    this.locked = true;
+                    // this.highlightQuadrantOf(this.hoveredCell, false);
+                    this.clearAllHovers();
+                    this.lastCell.hover = true;
                     this.cloneGrid();
                 }
-            } else if (/shift/i.test(event.key)) {
-                this.locked = false;
-                // console.log(this.hoveredCell);
-                // this.highlightQuadrantOf(this.hoveredCell, false);
-                this.clearAllHovers();
-                this.lastCell.hover = true;
-                this.cloneGrid();
             }
         },
         // checkKey(cell, event) {
@@ -270,6 +372,27 @@ export default {
                 cell.hover = false;
             })
         },
+        clearAllSelected() {
+            this.activeGrid.forEach(cell => {
+                cell.hover = false;
+                cell.selected = false;
+            })
+            this.lastCell = null;
+            this.cloneGrid();
+        },
+        selectAll() {
+            this.activeGrid.forEach(cell => {
+                cell.selected = true;
+            })
+            this.cloneGrid();
+        },
+        selectMissing() {
+            this.activeGrid.forEach(cell => {
+                if (!this.cellExists(cell))
+                    cell.selected = true;
+            })
+            this.cloneGrid();
+        },
         hoverOff(cell, evt) {
             cell.hover = false;
             if (evt.shiftKey)
@@ -292,12 +415,26 @@ export default {
         },
         checkDisplay() {
             // console.log('checking display...')
-            if (this.boards.length && !this.mirror.length)
+            if (this.boards.length && !this.mirror.length) {
                 this.cloneGrid();
+                this.active = this.mirror[0].zoomLevel;
+                console.log(this.active)
+            }
+            if (!this.zoom && this.zoom !== 0) {
+                if (this.mirror.length) {
+                    this.active = this.mirror[0].zoomLevel;
+                    // console.log('No zoom?')
+                    // console.log(`Boards ${this.boards.length} : mirror ${this.mirror.length} : selection ${this.selection ? 'yes' : 'no'}`)
+                }
+                    
+            }
         },
         cloneGrid() {
             this.mirror = [].concat(this.boards);
             // console.log(this.mirror);
+        },
+        clearMirror() {
+            this.mirror = [];
         },
         checkCell(cell, evt) {
             if (this.shift) {
@@ -305,9 +442,11 @@ export default {
             } else {
                 // if (!this.overrideClick)
                 //     cell.selected = !cell.selected;
+                // cell.selected = !cell.selected;
             }
             this.cloneGrid();
-            console.log(this.selectedCells)
+            console.log(this.selectedCells);
+            console.log(this.activeGrid);
         },
         getCellStyle(cell) {
             // console.log('hello')
@@ -362,16 +501,35 @@ export default {
 
 <style>
 
+.exportToolbar {
+    margin-top: 1rem;
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(3, 1fr);
+    height: 50px;
+}
+
+.v-btn__content {
+    height: 100%;
+}
+
+
+
+.exportButton .v-btn {
+    /* height: 0px; */
+}
+
 .maincontent {
     box-sizing: border-box;
     /* border: 2px solid red; */
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    justify-content: flex-start;
+    flex-direction: column;
+    align-items: center;;
     height: 100%;
-    flex-wrap: wrap;
-    background-color: var(--color-scrollbar);
-    border: 2px solid var(--color-scrollbar);
+    /* flex-wrap: wrap; */
+    /* background-color: var(--color-scrollbar); */
+    /* border: 2px solid var(--color-scrollbar); */
 }
 
 .square {
@@ -380,6 +538,18 @@ export default {
     height: 90vw;
     background-size: contain;
     
+}
+
+.v-btn {
+    height: 100%;
+    margin: 0px;
+    min-width: 0px;
+}
+
+.boardanno {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .annotation {
@@ -399,14 +569,33 @@ export default {
 .annogrid {
     width: 100%;
     height: 60px;
-    border: 2px solid red;
+    /* background-color: var(--color-scrollbar); */
+    /* border: 2px solid red; */
+    box-sizing: border-box;
     display: grid;
-    grid-template-rows: 2fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    min-height: 60px;
+}
+
+.annotop {
+    box-sizing: border-box;
+    max-height: 30px;
+    display: grid;
+    grid-template-columns: 1fr 2fr 2fr 2fr;
+}
+
+.selectlabel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0px .25rem;
 }
 
 .annobottom {
+    box-sizing: border-box;
+    max-height: 30px;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, 1fr) 3fr;
 }
 
 /* .navbtn, .ZCount {

@@ -95,6 +95,16 @@ function exportTilemap(opts) {
     var message = 'Exporting complete';
     return true;
 }
+function exportSelectedTiles(group) {
+    // alert(group)
+    group = JSON.parse(group);
+    for (var i = 0; i < group.length; i++) {
+        var tile = group[i];
+        // console.log(options.path + tile.name + ', ' + tile.rect.join(','))
+        exportTile(tile.name, options.path, tile.rect);
+    }
+    return true;
+}
 function exportTileBoard(board) {
     for (var i = 0; i < board.grid.length; i++) {
         var cell = board.grid[i];

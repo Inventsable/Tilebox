@@ -101,6 +101,18 @@ function exportTilemap(opts) {
     return true;
 }
 
+function exportSelectedTiles(group) {
+    // alert(group)
+    group = JSON.parse(group);
+
+    for (let i = 0; i < group.length; i++) {
+        const tile = group[i];
+        // console.log(options.path + tile.name + ', ' + tile.rect.join(','))
+        exportTile(tile.name, options.path, tile.rect);
+    }
+    return true;
+}
+
 function exportTileBoard(board) {
     for (let i = 0; i < board.grid.length; i++) {
         const cell = board.grid[i];

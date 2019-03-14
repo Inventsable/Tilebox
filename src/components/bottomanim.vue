@@ -2,15 +2,7 @@
     <div class="text-xs-center">
         <v-bottom-sheet persistent v-model="state" :hide-overlay="true" inset>
             <v-card class="grey darken-4" tile>
-                <v-progress-linear
-                    v-model="value"
-                    :active="show"
-                    :indeterminate="query"
-                    :query="true"
-                    class="my-0"
-                    height="3"
-                    color="primary"
-                    ></v-progress-linear>
+                
                     <!-- :value="progress" -->
                     <!-- v-show="progress !== 0" -->
                 
@@ -89,9 +81,9 @@ export default {
     data: () => ({
         progress: 0,
         count: 0,
-        value: 0,
-        show: true,
-        query: false,
+        // value: 0,
+        // show: true,
+        // query: false,
         querying: false,
         interval: 0
     }),
@@ -109,45 +101,45 @@ export default {
             // this.progress = 0;
             // console.log('Mounting CSInterface')
             this.$root.$children[0].csInterface.addEventListener('startload', this.logLength);
-            this.$root.$children[0].csInterface.addEventListener('step', this.addStep);
+            // this.$root.$children[0].csInterface.addEventListener('step', this.addStep);
             this.$root.$children[0].csInterface.addEventListener('console', this.consoler);
         },
-        startScan() {
-            this.queryAndIndeterminate()
-        },
+        // startScan() {
+        //     this.queryAndIndeterminate()
+        // },
         consoler(msg) {
             // if (typeof msg === 'String')
             //     console.log(`HOST: ${msg.data}`);
             // else
                 console.log(msg.data);
         },
-        stopScan() {
-            this.query = false;
-        },
-        endScan() {
-            // this.query = false;
-            // this.show = true;
-            // this.value = 0;
-        },
-        queryAndIndeterminate() {
-            this.query = true
-            this.show = true
-            this.value = 0
-        },
-        addStep(step) {
-            this.query = false;
-            // console.log(step.data);
-            // console.log(this.step);
-            this.value = this.step * (step + 1)
-            // if (this.progress + this.step < 100) {
-            //     this.progress += this.step;
-            // } else {
-            //     console.log('Done');
-            //     setTimeout(() => {
-            //         this.progress = 0;
-            //     }, 1000);
-            // }
-        },
+        // stopScan() {
+        //     this.query = false;
+        // },
+        // endScan() {
+        //     // this.query = false;
+        //     // this.show = true;
+        //     // this.value = 0;
+        // },
+        // queryAndIndeterminate() {
+        //     this.query = true
+        //     this.show = true
+        //     this.value = 0
+        // },
+        // addStep(step) {
+        //     this.query = false;
+        //     // console.log(step.data);
+        //     // console.log(this.step);
+        //     this.value = this.step * (step + 1)
+        //     // if (this.progress + this.step < 100) {
+        //     //     this.progress += this.step;
+        //     // } else {
+        //     //     console.log('Done');
+        //     //     setTimeout(() => {
+        //     //         this.progress = 0;
+        //     //     }, 1000);
+        //     // }
+        // },
         init() {
             location.reload();
         },
